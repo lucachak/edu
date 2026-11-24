@@ -1,0 +1,32 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Registro de vendas{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Registro de Vendas</h1><p>Histórico de pedidos pagos (confirmados, em preparo, prontos e retirados).</p></div></div>
+<div class="kpis">
+  <div class="kpi verde"><strong>{{ receita|reais }}</strong><span>Receita total</span></div>
+  <div class="kpi laranja"><strong>{{ quantidade }}</strong><span>Pedidos</span></div>
+  <div class="kpi azul"><strong>{{ ticket|reais }}</strong><span>Ticket médio</span></div>
+</div>
+{% if pedidos %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <caption class="sr-only">Últimos pedidos pagos</caption>
+    <thead><tr><th>Pedido</th><th>Itens</th><th>Cliente</th><th>Data</th><th>Status</th><th style="text-align:right">Valor</th></tr></thead>
+    <tbody>
+    {% for p in pedidos %}
+      <tr>
+        <td><strong>#{{ p.pk }}</strong></td>
+        <td>{% for item in p.itens.all %}{{ item.nome_produto }} x{{ item.quantidade }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+        <td>{{ p.usuario.nome }}</td>
+        <td>{{ p.confirmado_em|date:"D d/m H:i" }}</td>
+        <td><span class="selo selo-{{ p.status }}">{{ p.get_status_display }}</span></td>
+        <td style="text-align:right" class="valor-verde">{{ p.valor_total|reais }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="vazio"><h2>Nenhuma venda registrada</h2><p>As vendas aparecem aqui assim que os pagamentos forem confirmados.</p></div>
+{% endif %}
+{% endblock %}

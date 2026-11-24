@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Estabelecimentos{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Estabelecimentos</h1><p>Somente administradores cadastram, editam e desativam estabelecimentos.</p></div>
+<a class="btn btn-primario" href="{% url 'administracao:estabelecimento_novo' %}">{% icone 'plus' %} Novo estabelecimento</a></div>
+{% if estabelecimentos %}
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th>Nome</th><th>Código</th><th>Local</th><th>Identificação</th><th>Produtos</th><th>Funcionários</th><th>Situação</th><th></th></tr></thead>
+    <tbody>
+    {% for e in estabelecimentos %}
+      <tr>
+        <td><strong>{{ e.nome }}</strong><br><small>{{ e.email }}</small></td>
+        <td><strong class="codigo-cantina-inline">{{ e.codigo_acesso|default:"-" }}</strong></td>
+        <td>{{ e.local_completo|default:"-" }}</td>
+        <td>{{ e.identificacao|default:"-" }}</td>
+        <td>{{ e.n_produtos }}</td>
+        <td>{{ e.n_funcionarios }}</td>
+        <td>{% if e.ativo %}<span class="selo selo-ok">Ativo</span>{% else %}<span class="selo selo-neutro">Desativado</span>{% endif %}</td>
+        <td>
+          <div class="linha" style="justify-content:flex-end">
+            <a class="btn btn-secundario btn-pequeno" href="{% url 'administracao:estabelecimento_editar' e.unique_id %}">Editar</a>
+            <form method="post" action="{% url 'administracao:estabelecimento_ativo' e.unique_id %}" data-confirmar="{% if e.ativo %}Desativar “{{ e.nome }}”? Clientes não poderão mais fazer pedidos nele.{% else %}Reativar “{{ e.nome }}”?{% endif %}" data-confirmar-titulo="{% if e.ativo %}Desativar?{% else %}Reativar?{% endif %}">
+              {% csrf_token %}<button class="btn btn-pequeno {% if e.ativo %}btn-perigo{% else %}btn-sucesso{% endif %}" type="submit">{% if e.ativo %}Desativar{% else %}Reativar{% endif %}</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="vazio"><h2>Nenhum estabelecimento</h2><p>Cadastre a primeira cantina da plataforma.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "layouts/app.html" %}{% load static fastline_tags %}
+{% block titulo %}Cardápio de hoje{% endblock %}
+{% block conteudo %}
+<div class="cabecalho cabecalho-centro">
+  <div>
+    <h1>Cardápio de Hoje</h1>
+    <p>{{ cantina_atual.nome }} · {% now "l, d/m" %}</p>
+    <p class="saudacao-hora" data-saudacao data-nome="{{ user.get_short_name }}"></p>
+  </div>
+  <div class="acao-direita so-desktop">
+    <a class="btn btn-primario btn-pequeno btn-carrinho" href="{% url 'pedidos:carrinho' %}" data-abrir-carrinho>
+      {% icone 'cart' %} Carrinho
+      <span class="contador" data-contador-carrinho {% if not carrinho_qtd %}hidden{% endif %}>{{ carrinho_qtd }}</span>
+    </a>
+  </div>
+</div>
+
+<div class="food-carousel-shell">
+  <section class="fastline-food-carousel" aria-label="Destaques do cardápio">
+    <div class="food-slide">
+      <img src="{% static 'img/produtos/coxinha.jpg' %}" alt="Coxinha dourada e crocante" loading="lazy">
+      <span>Seu intervalo começa aqui</span>
+    </div>
+    <div class="food-slide">
+      <img src="{% static 'img/produtos/bauru.jpg' %}" alt="Bauru preparado para o lanche" loading="lazy">
+      <span>Seu lanche favorito, sem fila</span>
+    </div>
+    <div class="food-slide">
+      <img src="{% static 'img/produtos/suco-laranja.jpg' %}" alt="Suco de laranja" loading="lazy">
+      <span>Escolha, reserve e aproveite</span>
+    </div>
+  </section>
+  <div class="food-dots" aria-label="Navegação dos destaques"></div>
+</div>
+
+{% for esp in especiais %}
+<section class="especial" aria-label="Cardápio especial">
+  {% if esp.imagem %}<img src="{{ esp.imagem.url }}" alt="{{ esp.titulo }}">{% else %}<img src="{% static 'img/prato.png' %}" alt="">{% endif %}
+  <div>
+    <h2>{{ esp.titulo }}</h2>
+    {% if esp.descricao %}<p>{{ esp.descricao }}</p>{% endif %}{% if esp.preco %}<p><strong>{{ esp.preco|reais }}</strong></p>{% endif %}
+    {% if esp.produtos.all %}<p><strong>Itens:</strong> {% for p in esp.produtos.all %}{{ p.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  </div>
+</section>
+{% endfor %}
+
+{% if produtos %}
+<div class="chips" role="toolbar" aria-label="Filtrar por categoria">
+  <button type="button" class="chip ativo" data-filtro-categoria="todos" aria-pressed="true">Todos</button>
+  {% for cat in categorias %}
+  <button type="button" class="chip" data-filtro-categoria="{{ cat.pk }}" aria-pressed="false">{{ cat.nome }}</button>
+  {% endfor %}
+</div>
+
+<div class="grade-produtos">
+  {% for p in produtos %}
+  {% with img=p|imagem_produto %}
+  <article class="produto" data-categoria="{{ p.categoria_id|default:'0' }}">
+    <div class="produto-imagem">
+      {% if img %}<img src="{{ img }}" alt="{{ p.nome }}" loading="lazy">{% else %}<div class="sem-imagem" aria-hidden="true">{{ p.nome|iniciais }}</div>{% endif %}
+    </div>
+    <div class="produto-corpo">
+      <h3>{{ p.nome }}</h3>
+      {% if p.descricao %}<p class="descricao">{{ p.descricao|truncatechars:70 }}</p>{% endif %}
+      <div class="preco">{{ p.preco|reais }}</div>
+      <form method="post" action="{% url 'pedidos:carrinho_adicionar' p.pk %}" data-ajax data-abrir-depois>
+        {% csrf_token %}
+        <input type="hidden" name="quantidade" value="1">
+        <button class="btn btn-primario" type="submit">Adicionar ao carrinho</button>
+      </form>
+    </div>
+  </article>
+  {% endwith %}
+  {% endfor %}
+</div>
+<div class="vazio" id="cardapio-filtro-vazio" hidden><p>Nenhum produto nesta categoria.</p></div>
+{% else %}
+<div class="vazio">
+  <img src="{% static 'img/prato.png' %}" alt="">
+  <h2>Cardápio ainda vazio</h2>
+  <p>Esta cantina ainda não publicou produtos. Tente outra cantina ou volte mais tarde.</p>
+  <a class="btn btn-primario" href="{% url 'estabelecimentos:escolher' %}">Ver cantinas</a>
+</div>
+{% endif %}
+{% endblock %}

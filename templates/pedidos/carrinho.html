@@ -1,0 +1,9 @@
+{% extends "layouts/app.html" %}
+{% block titulo %}Meu carrinho{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Meu Carrinho</h1><p>Revise os itens antes do pagamento.</p></div>
+<a class="btn btn-secundario" href="{% url 'produtos:cardapio' %}">Continuar comprando</a></div>
+<div data-pagina-carrinho class="cartao" style="max-width:520px;padding:0;display:flex;flex-direction:column">
+  {% include "pedidos/_carrinho.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "layouts/app.html" %}
+{% block titulo %}Alterar senha{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Alterar senha</h1><p>Use pelo menos 8 caracteres, evitando senhas óbvias.</p></div></div>
+<form class="cartao" method="post" novalidate style="max-width:480px">
+  {% csrf_token %}
+  {% include "_erros_form.html" %}
+  {% for campo in form %}{% include "_campo.html" with campo=campo %}{% endfor %}
+  <div class="linha">
+    <a class="btn btn-secundario" href="{% url 'usuarios:perfil' %}">Cancelar</a>
+    <button class="btn btn-primario" type="submit">Salvar nova senha</button>
+  </div>
+</form>
+{% endblock %}

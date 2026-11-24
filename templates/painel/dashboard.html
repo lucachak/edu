@@ -1,0 +1,51 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Dashboard{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Dashboard</h1><p>Visão geral de vendas e desempenho da cantina.</p></div></div>
+<section class="codigo-cantina cartao" aria-labelledby="titulo-codigo">
+  <div class="codigo-cantina-texto">
+    <h2 id="titulo-codigo">Código da cantina</h2>
+    <p>Passe este código para seus clientes. Eles digitam o código no FastLine para se conectar à {{ cantina.nome }}.</p>
+  </div>
+  <div class="codigo-cantina-valor">
+    <strong id="codigo-cantina">{{ cantina.codigo_acesso }}</strong>
+    <div class="linha">
+      <button type="button" class="btn btn-secundario btn-pequeno" data-copiar-texto="{{ cantina.codigo_acesso }}" data-copiado="Código copiado!">{% icone 'file' %} Copiar código</button>
+      <button type="button" class="btn btn-secundario btn-pequeno" data-copiar-texto="{{ link_codigo }}" data-copiado="Link copiado!">{% icone 'arrow-right' %} Copiar link</button>
+      {% if pode_aprovar_funcionarios %}
+      <form method="post" action="{% url 'painel:regenerar_codigo' %}" data-confirmar="O código atual deixará de funcionar. Clientes que já salvaram a cantina continuam conectados." data-confirmar-titulo="Gerar novo código?">
+        {% csrf_token %}<button type="submit" class="btn btn-secundario btn-pequeno">{% icone 'refresh' %} Gerar novo</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+<div class="kpis">
+  <div class="kpi verde">{% icone 'dollar' %}<strong>{{ receita|reais }}</strong><span>Receita total</span></div>
+  <div class="kpi azul">{% icone 'file' %}<strong>{{ quantidade }}</strong><span>Total de vendas</span></div>
+  <div class="kpi laranja">{% icone 'trending' %}<strong>{{ ticket|reais }}</strong><span>Ticket médio</span></div>
+  <div class="kpi alerta-kpi">{% icone 'alert' %}<strong>{{ baixo_estoque }}</strong><span>Sem disponibilidade hoje</span></div>
+</div>
+<section class="grafico" aria-labelledby="titulo-grafico">
+  <h2 id="titulo-grafico">Receita por dia (últimos 7 dias)</h2>
+  <p class="texto-suave" style="font-size:.85rem">Receita em R$ por categoria</p>
+  {% if legenda %}
+  <div class="grafico-legenda">{% for nome, idx in legenda %}<span><i class="cor-{{ idx }}"></i>{{ nome }}</span>{% endfor %}</div>
+  {% endif %}
+  <div class="barras" role="img" aria-label="Gráfico de barras empilhadas da receita diária por categoria">
+    {% for col in colunas %}
+    <div class="barra" title="{{ col.data|date:'d/m' }}: {{ col.total|reais }}">
+      {% for seg in col.segmentos %}<div class="seg cor-{{ seg.indice }}" style="height:{{ seg.altura|stringformat:'.2f' }}%" title="{{ seg.categoria }}: {{ seg.valor|reais }}"></div>{% endfor %}
+      {% if col.total %}<div class="valor-topo">{{ col.total|floatformat:0 }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="rotulos-barras">{% for col in colunas %}<span>{{ col.rotulo }}<br><small>{{ col.data|date:"d/m" }}</small></span>{% endfor %}</div>
+  {% if not legenda %}<p class="texto-suave" style="text-align:center;margin-top:1rem">Ainda não há vendas nos últimos 7 dias.</p>{% endif %}
+  <table class="sr-only">
+    <caption>Receita por dia</caption>
+    <tr><th>Dia</th><th>Total</th></tr>
+    {% for col in colunas %}<tr><td>{{ col.data|date:"d/m" }}</td><td>{{ col.total|reais }}</td></tr>{% endfor %}
+  </table>
+</section>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% if form.non_field_errors %}
+<div class="alerta alerta-error alerta-inline" role="alert">
+  <span>{% for erro in form.non_field_errors %}{{ erro }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>
+</div>
+{% endif %}

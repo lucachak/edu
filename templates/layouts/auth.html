@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load static %}
+{% block corpo %}
+<main class="auth" id="conteudo">
+  <section class="auth-vitrine" aria-hidden="true">
+    <div class="saudacao">BEM-VINDO À</div>
+    <div class="marca">FastLine<span>.</span></div>
+    <p class="vitrine-descricao">Seu lanche favorito, reservado antes mesmo do intervalo.</p>
+    <div class="vitrine-cards">
+      <div class="vc"><img src="{% static 'img/produtos/suco-laranja.jpg' %}" alt=""><span>Suco de laranja</span><b>R$ 2,50</b></div>
+      <div class="vc"><img src="{% static 'img/produtos/coxinha.jpg' %}" alt=""><span>Coxinha de frango</span><b>R$ 5,00</b></div>
+      <div class="vc"><img src="{% static 'img/produtos/croissant.jpg' %}" alt=""><span>Croissant</span><b>R$ 6,50</b></div>
+    </div>
+    <div class="vitrine-rodape">ESCOLHA · PAGUE · RETIRE</div>
+  </section>
+  <section class="auth-form">
+    {% block voltar %}{% endblock %}
+    <div class="auth-caixa">
+      <div class="auth-card">
+      <img class="logo" src="{% static 'img/logo-laranja.png' %}" alt="FASTLine - Cantina escolar digital">
+      {% block auth_conteudo %}{% endblock %}
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

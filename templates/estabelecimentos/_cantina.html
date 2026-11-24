@@ -1,0 +1,31 @@
+{% load static fastline_tags %}
+<div class="cantina{% if atual and atual.pk == c.pk %} selecionada{% endif %}">
+  <div class="cantina-icone{% if forloop.counter|divisibleby:2 %} alt{% endif %}">
+    <img src="{% if forloop.counter|divisibleby:2 %}{% static 'img/cantina-2.png' %}{% else %}{% static 'img/cantina-1.png' %}{% endif %}" alt="">
+  </div>
+  <div class="cantina-info">
+    <strong>{{ c.nome }}</strong>
+    <div class="meta">
+      {% if c.local or c.endereco %}<span>{% icone 'pin' %}{{ c.local|default:c.endereco }}</span>{% endif %}
+      {% if c.email %}<span>{% icone 'mail' %}{{ c.email }}</span>{% endif %}
+      {% if c.horario_abertura and c.horario_fechamento %}<span>{% icone 'clock' %}{{ c.horario_abertura|time:"H:i" }}–{{ c.horario_fechamento|time:"H:i" }}</span>{% endif %}
+    </div>
+    {% if c.descricao %}<small>{{ c.descricao|truncatechars:90 }}</small>{% endif %}
+  </div>
+  <div class="cantina-acoes">
+    <form method="post" action="{% url 'estabelecimentos:favorito' c.unique_id %}" data-sem-carregando>
+      {% csrf_token %}
+      <button type="submit" class="btn-favorito{% if c.pk in favoritos %} ativo{% endif %}" aria-pressed="{% if c.pk in favoritos %}true{% else %}false{% endif %}" title="{% if c.pk in favoritos %}Remover dos favoritos{% else %}Salvar como favorita{% endif %}">
+        {% icone 'star' %}<span class="sr-only">Favorita</span>
+      </button>
+    </form>
+    {% if atual and atual.pk == c.pk %}
+      <a class="marca-selecionada" href="{% url 'produtos:cardapio' %}" title="Cantina selecionada: ver cardápio">{% icone 'check' %}</a>
+    {% else %}
+    <form method="post" action="{% url 'estabelecimentos:selecionar' c.unique_id %}">
+      {% csrf_token %}
+      <a class="btn-ir" href="{% url 'estabelecimentos:detalhes' c.unique_id %}" title="Ver detalhes de {{ c.nome }}" aria-label="Ver detalhes de {{ c.nome }}">{% icone 'chevron-right' %}</a>
+    </form>
+    {% endif %}
+  </div>
+</div>

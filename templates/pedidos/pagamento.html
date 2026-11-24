@@ -1,0 +1,84 @@
+{% extends "layouts/app.html" %}{% load static fastline_tags %}
+{% block titulo %}Pagamento do pedido #{{ pedido.pk }}{% endblock %}
+{% block conteudo %}
+<div class="checkout">
+  <a class="voltar" href="{% url 'pedidos:tickets' %}">{% icone 'arrow-left' %} Meus tickets</a>
+  <h1 style="text-align:center">Pagamento</h1>
+  {% include "pedidos/_etapas.html" %}
+
+  {% if pedido.status == "cancelado" %}
+    <div class="cartao vazio">
+      <h2>Pedido cancelado</h2>
+      <p>{{ pedido.motivo_cancelamento|default:"Este pedido foi cancelado." }}</p>
+      <a class="btn btn-primario" href="{% url 'produtos:cardapio' %}">Fazer novo pedido</a>
+    </div>
+  {% elif pedido.status == "retirado" %}
+    <div class="cartao vazio"><h2>Pedido já retirado</h2><a class="btn btn-primario" href="{% url 'pedidos:tickets' %}">Ver meus tickets</a></div>
+  {% else %}
+  <div class="pilha">
+    <div class="cartao" style="text-align:center">
+      <p class="texto-suave" style="margin:0">Pedido <strong>#{{ pedido.pk }}</strong> · {{ pedido.valor_total|reais }}</p>
+      {% if pedido.reserva_expira_em %}
+      <p style="margin:.3rem 0 0">Unidades reservadas por mais <strong data-expira-em="{{ pedido.reserva_expira_em|date:'c' }}">{{ pedido.reserva_expira_em|timeuntil }}</strong></p>
+      {% endif %}
+    </div>
+
+    {% if not pag %}
+      <div class="alerta alerta-warning alerta-inline"><span>Escolha uma forma de pagamento para concluir.</span></div>
+    {% elif pag.provedor == "balcao" %}
+      <div class="cartao" style="text-align:center" data-status-url="{% url 'pedidos:status' pedido.codigo %}">
+        <img src="{% static 'img/ticket.png' %}" alt="" style="width:90px;margin:0 auto .6rem">
+        <h2>Pague no balcão da cantina</h2>
+        <p>Informe o número do pedido <strong>#{{ pedido.pk }}</strong> no caixa de <strong>{{ pedido.estabelecimento.nome }}</strong>. Assim que o funcionário confirmar o pagamento, seu código de retirada aparece aqui.</p>
+        <p class="aguardando">Aguardando confirmação do pagamento</p>
+        <p class="texto-suave" style="font-size:.8rem">Modo de demonstração: o PagSeguro não está configurado neste servidor.</p>
+      </div>
+    {% elif pag.status == "erro" %}
+      <div class="alerta alerta-error alerta-inline" role="alert">{% icone 'alert' %}<span>{{ pag.mensagem|default:"Não foi possível iniciar o pagamento." }}</span></div>
+    {% elif pag.status == "recusado" %}
+      <div class="alerta alerta-error alerta-inline" role="alert">{% icone 'alert' %}<span>O pagamento foi recusado. Você pode tentar novamente com outra forma de pagamento.</span></div>
+    {% elif pag.metodo_pagamento == "pix" %}
+      <div class="cartao pix-qr" data-status-url="{% url 'pedidos:status' pedido.codigo %}">
+        <img src="{% static 'img/pix.png' %}" alt="PIX" style="width:90px;height:auto;border:0;padding:0">
+        {% if pag.pix_qrcode_url %}<img src="{{ pag.pix_qrcode_url }}" alt="QR Code PIX para pagamento" width="220" height="220">{% endif %}
+        {% if pag.pix_copia_e_cola %}
+        <label class="rotulo" for="pix-copia">PIX copia e cola</label>
+        <div class="copia-cola">
+          <input id="pix-copia" type="text" readonly value="{{ pag.pix_copia_e_cola }}">
+          <button class="btn btn-secundario" type="button" data-copiar="pix-copia">Copiar</button>
+        </div>
+        {% endif %}
+        <p class="aguardando">Aguardando pagamento</p>
+        <small>Ambiente: {% if pag.ambiente == "producao" %}produção{% else %}sandbox (testes) do PagSeguro{% endif %}. A confirmação é verificada pelo servidor junto ao PagSeguro.</small>
+        <a class="btn btn-secundario btn-pequeno" href="{% url 'pedidos:pagamento' pedido.codigo %}">{% icone 'refresh' %} Já paguei, verificar</a>
+      </div>
+    {% elif pag.link_pagamento %}
+      <div class="cartao" style="text-align:center" data-status-url="{% url 'pedidos:status' pedido.codigo %}">
+        <img src="{% static 'img/bandeiras.png' %}" alt="" style="width:180px;margin:0 auto .6rem">
+        <p>O pagamento com cartão é feito na página segura do PagBank. Os dados do cartão não passam pelo FastLine.</p>
+        <a class="btn btn-primario btn-grande" href="{{ pag.link_pagamento }}">Ir para o pagamento {% icone 'arrow-right' %}</a>
+        <p class="aguardando" style="margin-top:1rem">Aguardando confirmação</p>
+      </div>
+    {% endif %}
+
+    {% if pedido.status == "aguardando_pagamento" and pag.provedor != "balcao" and pag.status in "erro recusado" or not pag %}
+    <form method="post" action="{% url 'pedidos:tentar_novamente' pedido.codigo %}" class="cartao">
+      {% csrf_token %}
+      <label class="rotulo" for="novo-metodo">Tentar novamente com</label>
+      <div class="linha">
+        <select id="novo-metodo" name="metodo">{% for chave, nome in metodos.items %}<option value="{{ chave }}">{{ nome }}</option>{% endfor %}</select>
+        <button class="btn btn-primario" type="submit">Pagar</button>
+      </div>
+    </form>
+    {% endif %}
+
+    {% if pedido.status == "aguardando_pagamento" %}
+    <form method="post" action="{% url 'pedidos:cancelar' pedido.codigo %}" data-confirmar="Deseja desistir deste pedido? As unidades voltam para o cardápio." data-confirmar-titulo="Cancelar pedido?" style="text-align:center">
+      {% csrf_token %}
+      <button class="btn btn-perigo btn-pequeno" type="submit">Desistir do pedido</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

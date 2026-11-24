@@ -1,0 +1,90 @@
+{% extends "base.html" %}{% load static fastline_tags %}
+{% block corpo %}
+<div class="app">
+  <aside class="sidebar" aria-label="Menu principal">
+    <a class="sidebar-marca" href="{% url 'core:inicio' %}">
+      <strong>FastLine</strong>
+      <small>{{ area_nome }}</small>
+    </a>
+    <nav class="nav">
+      {% for chave, nome, url, ic in nav %}
+      <a href="{{ url }}" class="{% if secao == chave %}ativo{% endif %}" {% if secao == chave %}aria-current="page"{% endif %}>
+        {% icone ic %} {{ nome }}
+        {% if chave == "tickets" and tickets_ativos %}<span class="contador">{{ tickets_ativos }}</span>{% endif %}
+      </a>
+      {% endfor %}
+      {% if pode_aprovar_funcionarios %}<a href="{% url 'painel:funcionarios' %}" class="{% if secao == 'funcionarios' %}ativo{% endif %}">{% icone 'user' %} Aprovar funcionários</a>{% endif %}
+      {% if papel == "funcionario" %}<a href="{% url 'usuarios:vincular_cantina' %}">{% icone 'store' %} Adicionar cantina</a>{% endif %}
+    </nav>
+    <div class="sidebar-rodape">
+      {% if papel == "cliente" and cantina_atual %}
+      <a class="cartao-local" href="{% url 'estabelecimentos:escolher' %}" title="Trocar de cantina">
+        <small>Comprando em</small>
+        <strong>{{ cantina_atual.nome }}</strong>
+        <span>{{ cantina_atual.local|default:cantina_atual.endereco }}</span>
+      </a>
+      {% elif papel == "funcionario" and estab_funcionario %}
+        {% if estabs_vinculados|length > 1 %}
+        <form class="seletor-estab cartao-local" method="post" action="{% url 'painel:trocar_estabelecimento' %}" data-sem-carregando>
+          {% csrf_token %}
+          <label for="troca-estab"><small>Trabalhando em</small></label>
+          <select id="troca-estab" name="estabelecimento" onchange="this.form.submit()">
+            {% for e in estabs_vinculados %}<option value="{{ e.pk }}" {% if e.pk == estab_funcionario.pk %}selected{% endif %}>{{ e.nome }}</option>{% endfor %}
+          </select>
+          <noscript><button class="btn btn-pequeno btn-secundario" type="submit">Trocar</button></noscript>
+        </form>
+        {% else %}
+        <div class="cartao-local">
+          <small>Trabalhando em</small>
+          <strong>{{ estab_funcionario.nome }}</strong>
+          <span>{{ estab_funcionario.local|default:estab_funcionario.endereco }}</span>
+          {% if estab_funcionario.codigo_acesso %}<span class="cartao-local-codigo">Código: <b>{{ estab_funcionario.codigo_acesso }}</b></span>{% endif %}
+        </div>
+        {% endif %}
+      {% endif %}
+      <div class="sidebar-usuario">
+        <div><span>{{ user.get_permissao_display }}</span><strong title="{{ user.email }}">{{ user.nome }}</strong></div>
+        <form method="post" action="{% url 'usuarios:logout' %}">{% csrf_token %}<button class="btn-sair" type="submit">Sair</button></form>
+      </div>
+    </div>
+  </aside>
+
+  <header class="topo-mobile">
+    <a href="{% url 'core:inicio' %}" aria-label="Início"><img src="{% static 'img/logo.png' %}" alt="FASTLine"></a>
+    {% if papel == "cliente" and cantina_atual %}
+    <a class="local-mobile" href="{% url 'estabelecimentos:escolher' %}">Comprando em<strong>{{ cantina_atual.nome }}</strong></a>
+    {% elif papel == "funcionario" and estab_funcionario %}
+    <span class="local-mobile">Trabalhando em<strong>{{ estab_funcionario.nome }}</strong></span>
+    {% endif %}
+  </header>
+
+  <main class="conteudo" id="conteudo">
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <nav class="nav-mobile" aria-label="Menu">
+    {% if papel == "cliente" %}
+      <a href="{% url 'produtos:cardapio' %}" class="{% if secao == 'cardapio' %}ativo{% endif %}"><span class="bolha">{% icone 'book' %}</span>Cardápio</a>
+      <a href="{% url 'pedidos:tickets' %}" class="{% if secao == 'tickets' %}ativo{% endif %}"><span class="bolha">{% icone 'ticket' %}</span>Tickets{% if tickets_ativos %}<span class="contador">{{ tickets_ativos }}</span>{% endif %}</a>
+      {% if cantina_atual %}
+      <a href="{% url 'pedidos:carrinho' %}" data-abrir-carrinho><span class="bolha">{% icone 'cart' %}</span>Carrinho<span class="contador" data-contador-carrinho {% if not carrinho_qtd %}hidden{% endif %}>{{ carrinho_qtd }}</span></a>
+      {% endif %}
+      <a href="{% url 'estabelecimentos:escolher' %}" class="{% if secao == 'cantinas' %}ativo{% endif %}"><span class="bolha">{% icone 'store' %}</span>Cantinas</a>
+      <a href="{% url 'usuarios:perfil' %}" class="{% if secao == 'perfil' %}ativo{% endif %}"><span class="bolha">{% icone 'user' %}</span>Conta</a>
+      <form class="nav-mobile-form-sair" method="post" action="{% url 'usuarios:logout' %}">
+    {% csrf_token %}
+    <button type="submit">
+        <span class="bolha">{% icone 'logout' %}</span>
+        Sair
+    </button>
+</form>
+    {% else %}
+      {% for chave, nome, url, ic in nav_mobile %}
+        <a href="{{ url }}" class="{% if secao == chave %}ativo{% endif %}"><span class="bolha">{% icone ic %}</span>{{ nome }}</a>
+      {% endfor %}
+      <form class="nav-mobile-form-sair" method="post" action="{% url 'usuarios:logout' %}">{% csrf_token %}<button type="submit"><span class="bolha">{% icone 'logout' %}</span>Sair</button></form>
+    {% endif %}
+  </nav>
+</div>
+{% if papel == "cliente" and cantina_atual %}{% include "pedidos/_gaveta.html" %}{% endif %}
+{% endblock %}

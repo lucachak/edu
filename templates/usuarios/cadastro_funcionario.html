@@ -1,0 +1,9 @@
+{% extends "layouts/auth.html" %}{% load fastline_tags %}
+{% block titulo %}Cadastro de funcionário{% endblock %}
+{% block voltar %}<a class="auth-voltar" href="{% url 'usuarios:login' %}">{% icone 'arrow-left' %}</a>{% endblock %}
+{% block auth_conteudo %}
+<h1>Cadastro de funcionário</h1><p class="subtitulo">Informe o código da cantina. Seu acesso será liberado após aprovação de um gerente.</p>
+<form method="post" novalidate>{% csrf_token %}{% include "_erros_form.html" %}
+{% include "_campo.html" with campo=form.nome %}{% include "_campo.html" with campo=form.email %}{% include "_campo.html" with campo=form.data_nascimento %}{% include "_campo.html" with campo=form.email_responsavel %}{% include "_campo.html" with campo=form.senha %}{% include "_campo.html" with campo=form.confirmar_senha %}{% include "_campo.html" with campo=form.codigo_convite %}
+<button class="btn btn-primario btn-bloco btn-auth" type="submit">Solicitar acesso</button></form>
+<p class="auth-rodape"><a href="{% url 'usuarios:login' %}">Voltar ao login</a></p>{% endblock %}

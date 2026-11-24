@@ -1,0 +1,41 @@
+{% extends "layouts/app.html" %}{% load static fastline_tags %}
+{% block titulo %}Cardápio do dia{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Cardápio do Dia</h1><p>Publique o almoço do dia ou cardápios especiais. Eles aparecem no topo do cardápio dos clientes na data escolhida.</p></div></div>
+<div class="painel-itens">
+  {% if pode_editar %}
+  <form class="cartao form-novo" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    <h2>{% icone 'plus' %} Novo cardápio especial</h2>
+    {% include "_erros_form.html" %}
+    {% include "_campo.html" with campo=form.titulo %}
+    {% include "_campo.html" with campo=form.data %}
+    {% include "_campo.html" with campo=form.descricao %}
+    {% include "_campo.html" with campo=form.preco %}
+    {% include "_campo.html" with campo=form.imagem %}
+    <div class="campo"><span class="rotulo">Produtos em destaque</span>{{ form.produtos }}</div>
+    {% include "_campo.html" with campo=form.ativo %}
+    <button class="btn btn-primario btn-bloco" type="submit">Publicar</button>
+  </form>
+  {% endif %}
+  <section>
+    {% for esp in especiais %}
+    <div class="especial">
+      {% if esp.imagem %}<img src="{{ esp.imagem.url }}" alt="{{ esp.titulo }}">{% else %}<img src="{% static 'img/prato.png' %}" alt="">{% endif %}
+      <div style="flex:1">
+        <h2>{{ esp.titulo }} <span class="selo {% if esp.ativo %}selo-ok{% else %}selo-neutro{% endif %}">{{ esp.data|date:"d/m/Y" }}{% if not esp.ativo %} · oculto{% endif %}</span></h2>
+        {% if esp.descricao %}<p>{{ esp.descricao }}</p>{% endif %}{% if esp.preco %}<strong>{{ esp.preco|reais }}</strong>{% endif %}
+        {% if esp.produtos.all %}<p>{% for p in esp.produtos.all %}{{ p.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      </div>
+      {% if pode_editar %}
+      <form method="post" action="{% url 'painel:especial_remover' esp.pk %}" data-confirmar="Remover o cardápio “{{ esp.titulo }}”?" data-confirmar-titulo="Remover?">
+        {% csrf_token %}<button class="btn btn-perigo btn-pequeno" type="submit">Remover</button>
+      </form>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="vazio"><h2>Nenhum cardápio especial</h2><p>Publique o almoço de hoje para os clientes verem logo ao abrir o cardápio.</p></div>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

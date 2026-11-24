@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: fastline
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn fastline.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.14
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true

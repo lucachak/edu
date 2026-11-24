@@ -1,0 +1,12 @@
+{% extends "layouts/auth.html" %}
+{% block titulo %}Autorização do responsável{% endblock %}
+{% block auth_conteudo %}
+{% if confirmado %}
+<h1>Autorização confirmada</h1><p class="subtitulo">A conta do FastLine já pode ser utilizada.</p>
+<a class="btn btn-primario btn-bloco" href="{% url 'usuarios:login' %}">Ir para o login</a>
+{% elif expirado %}
+<h1>Link expirado</h1><p class="subtitulo">O link de autorização venceu. Solicite um novo cadastro ou entre em contato com a equipe do FastLine.</p>
+{% else %}
+<h1>Link inválido</h1><p class="subtitulo">Não foi possível validar esta autorização.</p>
+{% endif %}
+{% endblock %}

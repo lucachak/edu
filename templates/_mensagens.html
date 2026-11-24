@@ -1,0 +1,11 @@
+{% load fastline_tags %}{% if messages %}
+<div class="mensagens" aria-live="polite">
+  {% for message in messages %}
+  <div class="alerta alerta-{{ message.tags|default:'info' }}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">
+    {% if message.tags == 'success' %}{% icone 'check' %}{% elif message.tags == 'error' %}{% icone 'alert' %}{% else %}{% icone 'info' %}{% endif %}
+    <span>{{ message }}</span>
+    <button type="button" aria-label="Fechar">×</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

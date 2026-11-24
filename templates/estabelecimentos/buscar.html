@@ -1,0 +1,49 @@
+{% extends "layouts/app.html" %}
+{% load static fastline_tags %}
+{% block titulo %}Conectar a uma cantina{% endblock %}
+{% block conteudo %}
+
+<div class="cabecalho">
+  <div>
+    <p><a href="{% url 'estabelecimentos:escolher' %}">← Minhas cantinas</a></p>
+    <h1>Conectar a uma cantina</h1>
+    <p>Digite o código que a cantina divulga para encontrá-la e salvá-la na sua conta.</p>
+  </div>
+</div>
+
+<section class="cartao busca-cartao">
+  {% include "estabelecimentos/_form_codigo.html" with foco=True %}
+</section>
+
+{% if cantina_encontrada %}
+  {% with c=cantina_encontrada %}
+  <section class="resultado-busca" aria-labelledby="titulo-resultado">
+    <h2 class="resultado-label" id="titulo-resultado">Cantina encontrada</h2>
+    <div class="cantina cantina-resultado{% if atual and atual.pk == c.pk %} selecionada{% endif %}">
+      <div class="cantina-icone"><img src="{% static 'img/cantina-1.png' %}" alt=""></div>
+      <div class="cantina-info">
+        <strong>{{ c.nome }}</strong>
+        <div class="meta">
+          {% if c.local or c.endereco %}<span>{% icone 'pin' %}{{ c.local|default:c.endereco }}</span>{% endif %}
+          {% if c.horario_abertura and c.horario_fechamento %}<span>{% icone 'clock' %}{{ c.horario_abertura|time:"H:i" }}–{{ c.horario_fechamento|time:"H:i" }}</span>{% endif %}
+        </div>
+        {% if c.descricao %}<small>{{ c.descricao|truncatechars:120 }}</small>{% endif %}
+      </div>
+      <div class="cantina-resultado-acoes">
+        {% if atual and atual.pk == c.pk %}
+          <a class="btn btn-primario" href="{% url 'produtos:cardapio' %}">{% icone 'check' %} Ver cardápio</a>
+        {% else %}
+          <form method="post" action="{% url 'estabelecimentos:selecionar' c.unique_id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primario">{% icone 'arrow-right' %} Conectar e ver cardápio</button>
+          </form>
+        {% endif %}
+        <a class="btn btn-secundario" href="{% url 'estabelecimentos:detalhes' c.unique_id %}">Ver detalhes</a>
+      </div>
+    </div>
+    {% if c.pk in favoritos %}<p class="resultado-nota">{% icone 'check' %} Esta cantina já está salva na sua conta.</p>{% endif %}
+  </section>
+  {% endwith %}
+{% endif %}
+
+{% endblock %}

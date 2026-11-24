@@ -1,0 +1,34 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Administração{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Visão geral da plataforma</h1><p>Informações gerais de todos os estabelecimentos.</p></div>
+<a class="btn btn-primario" href="{% url 'administracao:estabelecimento_novo' %}">{% icone 'plus' %} Novo estabelecimento</a></div>
+<div class="kpis">
+  <div class="kpi verde">{% icone 'dollar' %}<strong>{{ receita|reais }}</strong><span>Receita total</span></div>
+  <div class="kpi azul">{% icone 'file' %}<strong>{{ n_pedidos }}</strong><span>Pedidos pagos</span></div>
+  <div class="kpi laranja">{% icone 'clock' %}<strong>{{ n_aguardando }}</strong><span>Aguardando pagamento</span></div>
+  <div class="kpi">{% icone 'store' %}<strong>{{ n_estabelecimentos }}</strong><span>Estabelecimentos ativos</span></div>
+  <div class="kpi">{% icone 'user' %}<strong>{{ n_clientes }}</strong><span>Clientes</span></div>
+  <div class="kpi">{% icone 'user' %}<strong>{{ n_funcionarios }}</strong><span>Funcionários</span></div>
+  <div class="kpi">{% icone 'box' %}<strong>{{ n_produtos }}</strong><span>Produtos ativos</span></div>
+</div>
+<div class="tabela-rolagem">
+  <table class="tabela">
+    <thead><tr><th>Estabelecimento</th><th>Situação</th><th>Funcionários</th><th>Pedidos pagos</th><th style="text-align:right">Receita</th></tr></thead>
+    <tbody>
+      {% for e in estabelecimentos %}
+      <tr>
+        <td><a href="{% url 'administracao:estabelecimento_editar' e.unique_id %}"><strong>{{ e.nome }}</strong></a><br><small>{{ e.local_completo }}</small></td>
+        <td>{% if e.ativo %}<span class="selo selo-ok">Ativo</span>{% else %}<span class="selo selo-neutro">Desativado</span>{% endif %}</td>
+        <td>{{ e.n_funcionarios }}</td>
+        <td>{{ e.n_pedidos }}</td>
+        <td style="text-align:right" class="valor-verde">{{ e.receita|reais }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="vazio">Nenhum estabelecimento cadastrado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="texto-suave" style="margin-top:1rem;font-size:.85rem">Para manutenção técnica avançada também existe o <a href="/admin/">admin do Django</a> (apenas contas com “acesso ao admin do Django”).</p>
+{% endblock %}

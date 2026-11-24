@@ -1,0 +1,17 @@
+{% load fastline_tags %}
+{# Campo para o cliente digitar o código da cantina. Usado na tela inicial e na busca. #}
+<form class="codigo-form" method="get" action="{% url 'estabelecimentos:buscar' %}" role="search">
+  <label for="codigo" class="codigo-form-rotulo">Código da cantina</label>
+  <div class="codigo-form-grupo">
+    <input id="codigo" type="text" name="codigo" value="{{ codigo|default:'' }}"
+           placeholder="Ex.: K7P2QX" maxlength="20" autocomplete="off" autocapitalize="characters"
+           spellcheck="false" inputmode="text" class="codigo-form-campo{% if erro %} com-erro{% endif %}"
+           {% if foco %}autofocus{% endif %} {% if erro %}aria-invalid="true" aria-describedby="codigo-erro"{% endif %}>
+    <button type="submit" class="btn btn-primario codigo-form-botao">{% icone 'search' %}<span>Conectar</span></button>
+  </div>
+  {% if erro %}
+    <p class="codigo-form-erro" id="codigo-erro" role="alert">{% icone 'alert' %}<span>{{ erro }}</span></p>
+  {% else %}
+    <p class="codigo-form-ajuda">Peça o código no balcão da cantina. Ele tem letras e números.</p>
+  {% endif %}
+</form>

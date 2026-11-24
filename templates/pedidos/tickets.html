@@ -1,0 +1,69 @@
+{% extends "layouts/app.html" %}{% load static fastline_tags %}
+{% block titulo %}Meus tickets{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Meus Tickets</h1><p>Histórico de pedidos e códigos de retirada.</p></div></div>
+{% if estabelecimentos_ticket %}
+<form method="get" class="filtro-tickets">
+  <label for="filtro-cantina">Mostrar tickets de</label>
+  <select id="filtro-cantina" name="cantina" onchange="this.form.submit()">
+    <option value="">Todas as cantinas</option>
+    {% for c in estabelecimentos_ticket %}<option value="{{ c.pk }}" {% if cantina_filtro == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}
+  </select>
+</form>
+{% endif %}
+{% if pedidos %}
+<div style="max-width:720px">
+  {% for p in pedidos %}
+  <details class="ticket" {% if forloop.first and p.token_retirada and p.status != "retirado" %}open{% endif %}>
+    <summary>
+      <div class="ticket-codigo{% if not p.token_retirada %} sem-token{% endif %}">
+        {% if p.token_retirada %}<div class="token-pequeno">{{ p.token_retirada }}</div><small>CÓDIGO</small>
+        {% else %}<div class="token-pequeno">#{{ p.pk }}</div><small>PEDIDO</small>{% endif %}
+      </div>
+      <div class="ticket-info">
+        <strong>{% for item in p.itens.all|slice:":2" %}{{ item.nome_produto }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if p.itens.all|length > 2 %} e mais{% endif %}</strong>
+        <span>{{ p.estabelecimento.nome }} · {{ p.data_pedido|date:"d/m/Y, H:i" }}</span><br>
+        <span class="selo selo-{{ p.status }}">{{ p.get_status_display }}</span>
+      </div>
+      <div class="ticket-direita">
+        <div class="preco">{{ p.valor_total|reais }}</div>
+        <span class="chevron">{% icone 'chevron-down' %}</span>
+      </div>
+    </summary>
+    <div class="ticket-detalhe">
+      <h4>Itens do pedido</h4>
+      <table class="tabela-resumo">
+        {% for item in p.itens.all %}<tr><td>{{ item.nome_produto }} <span class="preco">{{ item.quantidade }}x</span></td><td><strong>{{ item.subtotal|reais }}</strong></td></tr>{% endfor %}
+        <tr class="total"><td>Total</td><td class="valor-verde">{{ p.valor_total|reais }}</td></tr>
+      </table>
+      {% if p.token_expirado %}
+      <div class="alerta alerta-warning alerta-inline" style="margin-top:.8rem">Este ticket expirou. Procure a cantina para verificar seu pedido.</div>
+      {% elif p.token_retirada and p.status != "retirado" and p.status != "cancelado" %}
+      <div class="caixa-token-verde" style="margin-top:.8rem">
+        <small>Código de retirada</small>
+        <div class="token">{{ p.token_retirada }}</div>
+        <div class="dica">Apresente ao atendente no balcão · {{ p.estabelecimento.local_completo|default:p.estabelecimento.nome }}{% if p.token_expira_em %} · válido até {{ p.token_expira_em|date:"H:i" }}{% endif %}</div>
+      </div>
+      {% elif p.status == "retirado" %}
+      <p class="texto-suave" style="margin-top:.8rem">Retirado em {{ p.retirada.data_retirada|date:"d/m/Y \à\s H:i" }}. O código não pode ser usado novamente.</p>
+      {% elif p.status == "aguardando_pagamento" %}
+      <div class="linha" style="margin-top:.8rem;flex-wrap:wrap">
+        <a class="btn btn-primario btn-pequeno" href="{% url 'pedidos:pagamento' p.codigo %}">Concluir pagamento</a>
+        <form method="post" action="{% url 'pedidos:cancelar' p.codigo %}" data-confirmar="Deseja desistir deste pedido?" data-confirmar-titulo="Cancelar pedido?">{% csrf_token %}<button class="btn btn-perigo btn-pequeno" type="submit">Desistir</button></form>
+      </div>
+      {% elif p.status == "cancelado" %}
+      <p class="texto-suave" style="margin-top:.8rem">{{ p.motivo_cancelamento }}</p>
+      {% endif %}
+    </div>
+  </details>
+  {% endfor %}
+</div>
+{% else %}
+<div class="vazio">
+  <img src="{% static 'img/ticket.png' %}" alt="">
+  <h2>Nenhum ticket ainda</h2>
+  <p>Faça um pedido no cardápio para ver seus tickets aqui</p>
+  <a class="btn btn-primario" href="{% url 'produtos:cardapio' %}">Ver Cardápio</a>
+</div>
+{% endif %}
+{% endblock %}

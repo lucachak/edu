@@ -1,0 +1,4 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Aprovar funcionários{% endblock %}
+{% block conteudo %}<div class="cabecalho"><div><h1>Solicitações de acesso</h1><p>Confira quem solicitou entrar nesta cantina.</p></div><a class="btn btn-secundario" href="{% url 'usuarios:vincular_cantina' %}">Adicionar outra cantina à minha conta</a></div>
+{% for vinculo in pendentes %}<div class="cartao linha-entre" style="margin-bottom:.8rem"><div><strong>{{ vinculo.usuario.nome }}</strong><p class="texto-suave">{{ vinculo.usuario.email }} · {{ vinculo.criado_em|date:"d/m/Y H:i" }}</p></div><form method="post" action="{% url 'painel:aprovar_funcionario' vinculo.pk %}">{% csrf_token %}<button class="btn btn-primario" type="submit">Aprovar acesso</button></form></div>{% empty %}<div class="vazio"><h2>Nenhuma solicitação pendente</h2><p>Novos cadastros aparecerão aqui.</p></div>{% endfor %}{% endblock %}

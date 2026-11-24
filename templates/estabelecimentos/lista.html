@@ -1,0 +1,60 @@
+{% extends "layouts/app.html" %}
+{% load static fastline_tags %}
+{% block titulo %}Cantinas{% endblock %}
+{% block conteudo %}
+
+<div class="cabecalho">
+  <div>
+    <h1>Minhas Cantinas</h1>
+    <p>Cantinas salvas na sua conta. Para adicionar outra, use o código que a cantina divulga.</p>
+  </div>
+  <a class="btn btn-primario" href="{% url 'estabelecimentos:buscar' %}">
+    {% icone 'plus' %} Adicionar pelo código
+  </a>
+</div>
+
+<div class="lista-cantinas" style="max-width:640px">
+  {% for c in cantinas %}
+    <div class="cantina{% if atual and atual.pk == c.pk %} selecionada{% endif %}">
+      <div class="cantina-icone{% if forloop.counter|divisibleby:2 %} alt{% endif %}">
+        <img src="{% if forloop.counter|divisibleby:2 %}{% static 'img/cantina-2.png' %}{% else %}{% static 'img/cantina-1.png' %}{% endif %}" alt="">
+      </div>
+      <div class="cantina-info">
+        <strong>{{ c.nome }}</strong>
+        <div class="meta">
+          {% if c.local or c.endereco %}<span>{% icone 'pin' %}{{ c.local|default:c.endereco }}</span>{% endif %}
+          {% if c.email %}<span>{% icone 'mail' %}{{ c.email }}</span>{% endif %}
+          {% if c.horario_abertura and c.horario_fechamento %}
+            <span>{% icone 'clock' %}{{ c.horario_abertura|time:"H:i" }}–{{ c.horario_fechamento|time:"H:i" }}</span>
+          {% endif %}
+        </div>
+        {% if c.descricao %}<small>{{ c.descricao|truncatechars:90 }}</small>{% endif %}
+      </div>
+      <div class="cantina-acoes">
+        {# Remover da conta #}
+        <form method="post" action="{% url 'estabelecimentos:favorito' c.unique_id %}" data-sem-carregando>
+          {% csrf_token %}
+          <button type="submit" class="btn-remover" title="Remover cantina da sua conta">
+            {% icone 'trash' %}<span class="sr-only">Remover</span>
+          </button>
+        </form>
+        {# Selecionar / ir ao cardápio #}
+        {% if atual and atual.pk == c.pk %}
+          <a class="marca-selecionada" href="{% url 'produtos:cardapio' %}" title="Cantina selecionada: ver cardápio">{% icone 'check' %}</a>
+        {% else %}
+          <form method="post" action="{% url 'estabelecimentos:selecionar' c.unique_id %}">
+            {% csrf_token %}
+            <a class="btn-ir" href="{% url 'estabelecimentos:detalhes' c.unique_id %}" title="Ver detalhes de {{ c.nome }}" aria-label="Ver detalhes de {{ c.nome }}">{% icone 'chevron-right' %}</a>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="cartao vazio">
+      <h2>Nenhuma cantina salva</h2>
+      <p>Use o botão <strong>Adicionar pelo código</strong> acima e digite o código para adicionar uma cantina à sua conta.</p>
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

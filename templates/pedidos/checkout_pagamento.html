@@ -1,0 +1,39 @@
+{% extends "layouts/app.html" %}{% load static fastline_tags %}
+{% block titulo %}Checkout · Pagamento{% endblock %}
+{% block conteudo %}
+<div class="checkout">
+  <a class="voltar" href="{% url 'produtos:cardapio' %}">{% icone 'arrow-left' %} Voltar</a>
+  <h1 style="text-align:center">Checkout</h1>
+  {% include "pedidos/_etapas.html" %}
+  {% if modo == "balcao" %}
+  <div class="alerta alerta-warning alerta-inline aviso-modo" role="status">
+    {% icone 'info' %}<span>Modo de demonstração sem PagSeguro: o pagamento será confirmado por um funcionário no balcão da cantina. Para cobrar pelo PagSeguro, configure as credenciais no arquivo .env.</span>
+  </div>
+  {% elif modo == "indisponivel" %}
+  <div class="alerta alerta-error alerta-inline" role="alert"><span>Pagamentos indisponíveis no momento.</span></div>
+  {% endif %}
+  {% if erro %}<div class="alerta alerta-error alerta-inline" role="alert">{% icone 'alert' %}<span>{{ erro }}</span></div>{% endif %}
+  <form method="post" class="pilha">
+    {% csrf_token %}
+    <div class="cartao">
+      <div class="cartao-titulo">Forma de Pagamento</div>
+      <div class="formas-pagamento">
+        <label class="forma"><input type="radio" name="metodo" value="simulado" checked required><span class="marcador" aria-hidden="true"></span><img src="{% static 'img/pix.png' %}" alt="">Pagamento aprovado (simulação)</label>
+      </div>
+      <p class="nota-pagseguro">A opção de simulação aprova o pedido para demonstração e não movimenta dinheiro. As opções reais dependem da configuração do PagSeguro.</p>
+    </div>
+    {% with r=carrinho %}
+    <div class="cartao">
+      <div class="cartao-titulo">Resumo</div>
+      <table class="tabela-resumo">
+        {% for linha in r.linhas %}<tr><td>{{ linha.produto.nome }} <span class="texto-suave">{{ linha.quantidade }}x</span></td><td class="preco">{{ linha.subtotal|reais }}</td></tr>{% endfor %}
+        <tr class="total"><td>Total</td><td class="preco">{{ r.total|reais }}</td></tr>
+      </table>
+    </div>
+    {% endwith %}
+    <div style="text-align:center">
+      <button class="btn btn-primario btn-grande" type="submit" {% if modo == "indisponivel" %}disabled{% endif %}>Confirmar Pagamento {% icone 'arrow-right' %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

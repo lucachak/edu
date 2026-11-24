@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Django
+db.sqlite3-journal
+/media/
+/staticfiles/
+*.log
+
+# Ambiente (nunca versionar credenciais)
+.env
+
+# Sistemas/editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Banco local (pode conter dados de usuários)
+db.sqlite3

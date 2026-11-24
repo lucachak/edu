@@ -1,0 +1,21 @@
+{% extends "layouts/app.html" %}{% load static fastline_tags %}
+{% block titulo %}{{ cantina.nome }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><p><a href="{% url 'estabelecimentos:escolher' %}">← Voltar às cantinas</a></p><h1>Conheça a cantina</h1><p>Confira os dados antes de confirmar sua escolha.</p></div></div>
+<section class="cantina-detalhe cartao">
+  <div class="cantina-detalhe-capa"><img src="{% static 'img/cantina-1.png' %}" alt=""></div>
+  <div class="cantina-detalhe-conteudo">
+    <span class="selo selo-ok">Estabelecimento ativo</span>
+    <h2>{{ cantina.nome }}</h2>
+    {% if cantina.descricao %}<p>{{ cantina.descricao }}</p>{% endif %}
+    <dl class="cantina-dados">
+      <div><dt>Endereço</dt><dd>{{ cantina.endereco|default:"Não informado" }}</dd></div>
+      <div><dt>Local de retirada</dt><dd>{{ cantina.local|default:"Não informado" }}</dd></div>
+      <div><dt>Contato</dt><dd>{{ cantina.email|default:"Não informado" }}{% if cantina.telefone %} · {{ cantina.telefone }}{% endif %}</dd></div>
+      <div><dt>Funcionamento</dt><dd>{% if cantina.horario_abertura and cantina.horario_fechamento %}{{ cantina.horario_abertura|time:"H:i" }} às {{ cantina.horario_fechamento|time:"H:i" }}{% else %}Horário não informado{% endif %}</dd></div>
+    </dl>
+    {% if atual %}<a class="btn btn-secundario" href="{% url 'produtos:cardapio' %}">Ver cardápio desta cantina</a>
+    {% else %}<form method="post" action="{% url 'estabelecimentos:selecionar' cantina.unique_id %}">{% csrf_token %}<button class="btn btn-primario btn-grande" type="submit">Confirmar e ver cardápio</button></form>{% endif %}
+  </div>
+</section>
+{% endblock %}

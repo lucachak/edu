@@ -1,0 +1,36 @@
+FASTLINE - CODIGO DA CANTINA E TELA DE PESQUISA DE CANTINA
+
+O QUE MUDOU
+1. Tela "Escolha sua cantina" (cliente): o texto não some mais. Antes o fundo era
+   metade marrom / metade bege e o subtítulo e o campo (texto branco) caíam na parte
+   bege. Agora o título fica no bloco escuro e o campo do código fica num cartão branco.
+   A tela "Conectar a uma cantina" (dentro do app) também foi refeita, no celular e no PC.
+2. Código da cantina: cada cantina tem um código curto (ex.: 2HPCH2) que o cliente
+   digita para se conectar. Maiúsculas, espaços e hífen não importam (2hp-ch2 funciona).
+   - Cantinas existentes recebem um código automático ao rodar o migrate.
+   - Cantinas novas ganham um código automático; o administrador pode escolher outro
+     em Estabelecimentos > Editar (campo "Código da cantina").
+   - O funcionário vê o código no Dashboard e na barra lateral, com botões para copiar
+     o código ou um link pronto. Só o gerente pode "Gerar novo" código.
+   - Ao clicar em "Conectar e ver cardápio", a cantina já fica salva na conta do cliente.
+   - Cantina desativada não é encontrada pelo código.
+   - Código da cantina (clientes) é diferente do código de convite (funcionários).
+
+COMO APLICAR (Windows)
+1. Feche o servidor (Ctrl+C).
+2. Extraia o ZIP na pasta do projeto e escolha substituir os arquivos.
+   - FastLine-codigo-cantina-arquivos.zip: só os arquivos alterados (não mexe no
+     seu db.sqlite3, .env nem .venv). Recomendado.
+   - FastLine-codigo-cantina-completo.zip: projeto inteiro, com o db.sqlite3 que
+     você enviou já migrado. Substitui o seu banco local por esse.
+3. Ative o ambiente virtual e rode:
+      python manage.py migrate
+      python manage.py runserver
+4. No navegador, Ctrl+F5 para recarregar o CSS.
+
+TESTES
+- 10 testes novos em core/tests/test_codigo_cantina.py passam.
+- Rode com:  python manage.py test -t . core
+  (o "-t ." é necessário porque a pasta do projeto tem um __init__.py).
+- Atenção: 8 testes que já falhavam na versão que você enviou continuam falhando
+  (estoque/carrinho/checkout e cadastro de funcionário). Não são desta mudança.

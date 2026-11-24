@@ -1,0 +1,58 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Gerenciar itens{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Gerenciar Itens</h1><p>Cadastre e remova os produtos que aparecem no cardápio dos clientes.</p></div></div>
+<div class="contadores">
+  <span>{{ total }} Total</span>
+  <span class="ok">{{ disponiveis }} Disponíveis</span>
+  
+</div>
+<div class="painel-itens">
+  {% if pode_editar %}
+  <form class="cartao form-novo" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    <h2>{% icone 'plus' %} Novo Item</h2>
+    {% include "_erros_form.html" %}
+    {% include "_campo.html" with campo=form.nome %}
+    {% include "_campo.html" with campo=form.categoria %}
+    {% include "_campo.html" with campo=form.nova_categoria %}
+    {% include "_campo.html" with campo=form.preco %}
+    {% include "_campo.html" with campo=form.descricao %}
+    {% include "_campo.html" with campo=form.imagem %}
+    {% include "_campo.html" with campo=form.ativo %}
+    <button class="btn btn-primario btn-bloco" type="submit">+ Adicionar</button>
+  </form>
+  {% else %}
+  <div class="cartao"><p>Seu vínculo permite apenas consultar os produtos.</p></div>
+  {% endif %}
+  <section>
+    <div class="chips" style="justify-content:flex-start" role="toolbar" aria-label="Filtrar por categoria">
+      <button type="button" class="chip ativo" data-filtro-categoria="todos" aria-pressed="true">Todos</button>
+      {% for cat in categorias %}<button type="button" class="chip" data-filtro-categoria="{{ cat.pk }}" aria-pressed="false">{{ cat.nome }}</button>{% endfor %}
+    </div>
+    {% for p in produtos %}
+    {% with img=p|imagem_produto %}
+    <div class="item-gerencia{% if not p.ativo %} inativo{% endif %}" id="produto-{{ p.pk }}" data-categoria="{{ p.categoria_id|default:'0' }}">
+      {% if img %}<img src="{{ img }}" alt="">{% else %}<div class="mini" aria-hidden="true">{{ p.nome|iniciais }}</div>{% endif %}
+      <div>
+        <strong>{{ p.nome }}</strong>
+        <small class="texto-suave">{{ p.categoria.nome|default:"Sem categoria" }} · {{ p.preco|reais }}</small><br>
+        {% if not p.ativo %}<span class="selo selo-neutro">Removido do cardápio</span>{% else %}<span class="selo selo-ok">Visível no cardápio</span>{% endif %}
+      </div>
+      {% if pode_editar %}
+      <div class="controles">
+        <a class="btn btn-secundario btn-pequeno" href="{% url 'painel:produto_editar' p.pk %}">{% icone 'edit' %} Editar</a>
+        <form method="post" action="{% url 'painel:produto_remover' p.pk %}" data-confirmar="Remover “{{ p.nome }}”? Se houver pedidos com este produto ele será apenas desativado." data-confirmar-titulo="Remover produto?">
+          {% csrf_token %}<button class="btn btn-perigo btn-pequeno" type="submit">Remover</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="vazio"><h2>Nenhum produto cadastrado</h2><p>Use o formulário “Novo Item” para cadastrar o primeiro produto.</p></div>
+    {% endfor %}
+    <div class="vazio" id="cardapio-filtro-vazio" hidden><p>Nenhum produto nesta categoria.</p></div>
+  </section>
+</div>
+{% endblock %}

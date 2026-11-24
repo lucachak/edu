@@ -1,0 +1,50 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}{% if objeto %}{{ objeto.nome }}{% else %}Novo usuário{% endif %}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>{% if objeto %}{{ objeto.nome }}{% else %}Novo usuário{% endif %}</h1><p>{% if objeto %}{{ objeto.email }} · cadastrado em {{ objeto.date_joined|date:"d/m/Y" }}{% else %}Crie contas de funcionários e administradores.{% endif %}</p></div>
+<a class="btn btn-secundario" href="{% url 'administracao:usuarios' %}">Voltar</a></div>
+<div class="painel-itens" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+  <form class="cartao" method="post" novalidate>
+    {% csrf_token %}
+    <h2>Dados e permissão</h2>
+    {% include "_erros_form.html" %}
+    {% include "_campo.html" with campo=form.nome %}
+    {% include "_campo.html" with campo=form.email %}
+    {% include "_campo.html" with campo=form.permissao %}
+    {% include "_campo.html" with campo=form.nova_senha %}
+    <div class="grade-form">
+      {% include "_campo.html" with campo=form.cpf %}
+      {% include "_campo.html" with campo=form.telefone %}
+    </div>
+    {% include "_campo.html" with campo=form.is_active %}
+    <button class="btn btn-primario" type="submit">Salvar</button>
+  </form>
+  {% if objeto %}
+  <section class="cartao">
+    <h2>Vínculos com estabelecimentos</h2>
+    <p class="texto-suave" style="font-size:.85rem">Funcionários só acessam o painel dos estabelecimentos com vínculo ativo.</p>
+    {% for v in vinculos %}
+    <div class="linha-entre" style="padding:.5rem 0;border-bottom:1px dashed var(--borda)">
+      <div><strong>{{ v.estabelecimento.nome }}</strong><br><small>{{ v.funcao }}{% if v.pode_gerenciar_produtos %} · gerencia produtos{% endif %}</small></div>
+      <div class="linha">
+        <span class="selo {% if v.ativo %}selo-ok{% else %}selo-neutro{% endif %}">{% if v.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+        <form method="post" action="{% url 'administracao:vinculo_alternar' v.pk %}">{% csrf_token %}<button class="btn btn-secundario btn-pequeno" type="submit">{% if v.ativo %}Desativar{% else %}Ativar{% endif %}</button></form>
+        <form method="post" action="{% url 'administracao:vinculo_remover' v.pk %}" data-confirmar="Remover o vínculo com {{ v.estabelecimento.nome }}?" data-confirmar-titulo="Remover vínculo?">{% csrf_token %}<button class="btn btn-perigo btn-pequeno" type="submit">Remover</button></form>
+      </div>
+    </div>
+    {% empty %}
+    <p class="texto-suave">Nenhum vínculo.</p>
+    {% endfor %}
+    <form method="post" action="{% url 'administracao:vinculo_adicionar' objeto.pk %}" style="margin-top:1rem" novalidate>
+      {% csrf_token %}
+      <h3>Adicionar vínculo</h3>
+      {% include "_campo.html" with campo=vinculo_form.estabelecimento %}
+      {% include "_campo.html" with campo=vinculo_form.funcao %}
+      {% include "_campo.html" with campo=vinculo_form.pode_gerenciar_produtos %}
+      {% include "_campo.html" with campo=vinculo_form.ativo %}
+      <button class="btn btn-escuro" type="submit">Vincular</button>
+    </form>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

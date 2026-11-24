@@ -1,0 +1,40 @@
+{% extends "layouts/app.html" %}{% load static fastline_tags %}
+{% block titulo %}Checkout · Confirmação{% endblock %}
+{% block conteudo %}
+<div class="checkout">
+  <a class="voltar" href="{% url 'pedidos:checkout' %}">{% icone 'arrow-left' %} Voltar</a>
+  <h1 style="text-align:center">Checkout</h1>
+  {% include "pedidos/_etapas.html" %}
+  <form method="post" class="pilha" novalidate>
+    {% csrf_token %}
+    <div class="cartao">
+      <div class="cartao-titulo">Resumo</div>
+      <table class="tabela-resumo">
+        {% for linha in carrinho.linhas %}
+        <tr><td>{{ linha.produto.nome }} <span class="texto-suave">{{ linha.quantidade }}x</span></td><td class="preco">{{ linha.subtotal|reais }}</td></tr>
+        {% endfor %}
+        <tr><td colspan="2"><hr class="divisor"></td></tr>
+        <tr><td>Forma de pagamento:</td><td class="preco">{{ metodo_nome }}</td></tr>
+        <tr><td>Local de recebimento:</td><td class="preco" style="white-space:normal">{{ cantina_atual.nome }}{% if cantina_atual.local_completo %}<br>{{ cantina_atual.local_completo }}{% endif %}</td></tr>
+        <tr><td>Subtotal:</td><td class="preco">{{ carrinho.subtotal|reais }}</td></tr>
+        <tr><td><small>Taxa de serviço</small></td><td><small class="preco">+ {{ carrinho.taxa_servico|reais }}</small></td></tr>
+        <tr class="total"><td>Total:</td><td class="preco">{{ carrinho.total|reais }}</td></tr>
+      </table>
+    </div>
+    {% if cpf_form %}
+    <div class="cartao">
+      <div class="cartao-titulo">Dados do pagador</div>
+      <p class="texto-suave" style="font-size:.85rem">Necessário somente para uma cobrança real do PagSeguro. O FastLine não grava esse CPF no perfil.</p>
+      {% include "_campo.html" with campo=cpf_form.cpf %}
+    </div>
+    {% endif %}
+    {% if carrinho.tem_problema %}
+    <div class="alerta alerta-error alerta-inline" role="alert"><span>Alguns itens excedem a disponibilidade. Volte ao carrinho e ajuste as quantidades.</span></div>
+    {% endif %}
+    <p class="texto-suave" style="text-align:center;font-size:.85rem">Modo de demonstração: o pagamento será marcado como aprovado automaticamente, sem cobrança real. O ticket terá validade de 4 horas.</p>
+    <div style="text-align:center">
+      <button class="btn btn-primario btn-grande" type="submit" {% if carrinho.tem_problema %}disabled{% endif %}>Confirmar Pagamento {% icone 'arrow-right' %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

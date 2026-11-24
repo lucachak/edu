@@ -1,0 +1,46 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Pedidos{% endblock %}
+{% block conteudo %}
+<div class="cabecalho"><div><h1>Pedidos</h1><p>Pedidos recebidos em {{ estab_funcionario.nome }}. Atualize o status conforme o preparo.</p></div>
+<a class="btn btn-secundario" href="{% url 'painel:pedidos' %}?filtro={{ filtro }}">{% icone 'refresh' %} Atualizar</a></div>
+<nav class="abas" aria-label="Filtrar pedidos">
+  {% for chave, nome, qtd in filtros %}
+  <a href="?filtro={{ chave }}" class="{% if filtro == chave %}ativo{% endif %}">{{ nome }}<b>{{ qtd }}</b></a>
+  {% endfor %}
+</nav>
+{% for p in pedidos %}
+<article class="pedido-painel">
+  <div>
+    <div class="linha" style="flex-wrap:wrap">
+      <strong>Pedido #{{ p.pk }}</strong>
+      <span class="selo selo-{{ p.status }}">{{ p.get_status_display }}</span>
+      {% if p.token_retirada %}<span class="token-pequeno" title="Token de retirada">{{ p.token_retirada }}</span>{% endif %}
+    </div>
+    <small>{{ p.usuario.nome }} · {{ p.data_pedido|date:"d/m H:i" }} · {{ p.valor_total|reais }}{% if p.pagamento %} · {% if p.pagamento.provedor == "balcao" %}Pagamento no balcão{% else %}{{ p.pagamento.get_metodo_pagamento_display }} · PagSeguro{% endif %}{% endif %}</small>
+    <ul>{% for item in p.itens.all %}<li>{{ item.quantidade }}x {{ item.nome_produto }}</li>{% endfor %}</ul>
+    {% if p.status == "aguardando_pagamento" and p.reserva_expira_em %}<small>Reserva expira às {{ p.reserva_expira_em|time:"H:i" }}</small>{% endif %}
+    {% if p.status == "cancelado" %}<small>{{ p.motivo_cancelamento }}</small>{% endif %}
+    {% if p.status == "retirado" %}<small>Retirado em {{ p.retirada.data_retirada|date:"d/m H:i" }}{% if p.retirada.confirmado_por %} por {{ p.retirada.confirmado_por.nome }}{% endif %}</small>{% endif %}
+  </div>
+  <div class="acoes">
+    {% if p.status == "aguardando_pagamento" and p.pagamento.provedor == "balcao" %}
+    <form method="post" action="{% url 'painel:pedido_pagamento_balcao' p.pk %}" data-confirmar="Confirmar que o pagamento de {{ p.valor_total|reais }} foi recebido no balcão?" data-confirmar-titulo="Pagamento recebido?">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="btn btn-sucesso btn-pequeno" type="submit">{% icone 'check' %} Pagamento recebido</button>
+    </form>
+    {% endif %}
+    {% for st in p.transicoes_permitidas %}
+    <form method="post" action="{% url 'painel:pedido_status' p.pk %}" {% if st == "cancelado" %}data-confirmar="Cancelar o pedido #{{ p.pk }}? As unidades voltam para a disponibilidade online.{% if p.status != 'aguardando_pagamento' %} O pedido já foi pago: faça o estorno ao cliente.{% endif %}" data-confirmar-titulo="Cancelar pedido?"{% endif %}>
+      {% csrf_token %}<input type="hidden" name="status" value="{{ st }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="btn btn-pequeno {% if st == 'cancelado' %}btn-perigo{% elif st == 'pronto' %}btn-primario{% else %}btn-secundario{% endif %}" type="submit">
+        {% if st == "em_preparacao" %}Em preparação{% elif st == "pronto" %}Pronto para retirada{% elif st == "cancelado" %}Cancelar{% else %}{{ st }}{% endif %}
+      </button>
+    </form>
+    {% endfor %}
+    {% if p.status == "pronto" %}<a class="btn btn-escuro btn-pequeno" href="{% url 'painel:token' %}?token={{ p.token_retirada }}">Retirada</a>{% endif %}
+  </div>
+</article>
+{% empty %}
+<div class="vazio"><h2>Nenhum pedido aqui</h2><p>Quando houver pedidos nesta situação eles aparecem nesta lista.</p></div>
+{% endfor %}
+{% endblock %}

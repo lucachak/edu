@@ -1,0 +1,50 @@
+{% extends "base.html" %}{% load static fastline_tags %}
+{% block titulo %}Escolha sua cantina{% endblock %}
+{% block corpo %}
+<main class="escolha" id="conteudo">
+  <header class="escolha-hero">
+    <form class="escolha-topo" method="post" action="{% url 'usuarios:logout' %}">{% csrf_token %}<button class="btn-sair" type="submit">Sair</button></form>
+    <img class="prato" src="{% static 'img/prato.png' %}" alt="">
+    <h1>Escolha sua cantina</h1>
+    <p class="subtitulo">Digite o código da cantina para se conectar e começar a pedir.</p>
+  </header>
+
+  <div class="escolha-corpo">
+    <section class="escolha-cartao" aria-label="Conectar a uma cantina">
+      {% include "estabelecimentos/_form_codigo.html" with foco=True %}
+    </section>
+
+    {% if cantinas %}
+    <section class="escolha-salvas" aria-labelledby="titulo-salvas">
+      <h2 class="escolha-salvas-titulo" id="titulo-salvas">Cantinas salvas na sua conta</h2>
+      <div class="lista-cantinas">
+        {% for c in cantinas %}
+          <div class="cantina" style="--i: {{ forloop.counter0 }}">
+            <div class="cantina-icone{% if forloop.counter|divisibleby:2 %} alt{% endif %}">
+              <img src="{% if forloop.counter|divisibleby:2 %}{% static 'img/cantina-2.png' %}{% else %}{% static 'img/cantina-1.png' %}{% endif %}" alt="">
+            </div>
+            <div class="cantina-info">
+              <strong>{{ c.nome }}</strong>
+              <div class="meta">
+                {% if c.local or c.endereco %}<span>{% icone 'pin' %}{{ c.local|default:c.endereco }}</span>{% endif %}
+                {% if c.horario_abertura and c.horario_fechamento %}<span>{% icone 'clock' %}{{ c.horario_abertura|time:"H:i" }}–{{ c.horario_fechamento|time:"H:i" }}</span>{% endif %}
+              </div>
+            </div>
+            <div class="cantina-acoes">
+              <form method="post" action="{% url 'estabelecimentos:favorito' c.unique_id %}" data-sem-carregando>
+                {% csrf_token %}
+                <button type="submit" class="btn-remover" title="Remover {{ c.nome }} da sua conta">{% icone 'trash' %}<span class="sr-only">Remover</span></button>
+              </form>
+              <form method="post" action="{% url 'estabelecimentos:selecionar' c.unique_id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-ir" title="Comprar em {{ c.nome }}" aria-label="Comprar em {{ c.nome }}">{% icone 'chevron-right' %}</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

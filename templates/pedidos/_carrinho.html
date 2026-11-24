@@ -1,0 +1,47 @@
+{% load static fastline_tags %}
+<div class="gaveta-corpo">
+  {% if carrinho and carrinho.linhas %}
+    {% for linha in carrinho.linhas %}
+    <div class="item-carrinho">
+      <div>
+        <strong>{{ linha.produto.nome }}</strong>
+        <div class="meta">{{ linha.produto.preco|reais }} cada · subtotal {{ linha.subtotal|reais }}</div>
+      </div>
+      <form method="post" action="{% url 'pedidos:carrinho_remover' linha.produto.pk %}" data-ajax>
+        {% csrf_token %}
+        <button class="link-remover" type="submit">Remover</button>
+      </form>
+      <div class="quantidade" aria-label="Quantidade de {{ linha.produto.nome }}">
+        <form method="post" action="{% url 'pedidos:carrinho_atualizar' linha.produto.pk %}" data-ajax>
+          {% csrf_token %}<input type="hidden" name="quantidade" value="{{ linha.quantidade|add:'-1' }}">
+          <button class="btn-icone" type="submit" aria-label="Diminuir">−</button>
+        </form>
+        <output>{{ linha.quantidade }}</output>
+        <form method="post" action="{% url 'pedidos:carrinho_atualizar' linha.produto.pk %}" data-ajax>
+          {% csrf_token %}<input type="hidden" name="quantidade" value="{{ linha.quantidade|add:'1' }}">
+          <button class="btn-icone" type="submit" aria-label="Aumentar" {% if linha.quantidade >= linha.disponivel %}disabled{% endif %}>+</button>
+        </form>
+      </div>
+      {% if linha.disponivel < 100 %}<small class="texto-suave">{{ linha.disponivel }} disp.</small>{% endif %}
+      {% if linha.excede_disponivel %}<div class="aviso">Só restam {{ linha.disponivel }} unidade(s). Ajuste a quantidade.</div>{% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="gaveta-vazia">
+      <img src="{% static 'img/carrinho.png' %}" alt="">
+      <p>Seu carrinho está vazio</p>
+    </div>
+  {% endif %}
+</div>
+<div class="gaveta-rodape">
+  {% if carrinho and carrinho.taxa_servico %}
+  <div class="linha-entre"><small>Subtotal</small><small>{{ carrinho.subtotal|reais }}</small></div>
+  <div class="linha-entre"><small>Taxa de serviço</small><small>{{ carrinho.taxa_servico|reais }}</small></div>
+  {% endif %}
+  <div class="total-linha"><span>Total</span><span>{{ carrinho.total|default:0|reais }}</span></div>
+  {% if carrinho and carrinho.linhas and not carrinho.tem_problema %}
+    <a class="btn btn-primario btn-bloco btn-grande" href="{% url 'pedidos:checkout' %}">Ir para Pagamento {% icone 'arrow-right' %}</a>
+  {% else %}
+    <button class="btn btn-primario btn-bloco btn-grande" type="button" disabled>Ir para Pagamento {% icone 'arrow-right' %}</button>
+  {% endif %}
+</div>

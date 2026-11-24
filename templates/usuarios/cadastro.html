@@ -1,0 +1,22 @@
+{% extends "layouts/auth.html" %}{% load fastline_tags %}
+{% block titulo %}Criar conta{% endblock %}
+{% block voltar %}<a class="auth-voltar" href="{% url 'usuarios:login' %}" aria-label="Voltar para o login">{% icone 'arrow-left' %}</a>{% endblock %}
+{% block auth_conteudo %}
+<h1>Bem-vindo</h1>
+<p class="subtitulo">Cliente selecionado: crie sua conta</p>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% include "_erros_form.html" %}
+  {% include "_campo.html" with campo=form.nome %}
+  {% include "_campo.html" with campo=form.email %}
+  {% include "_campo.html" with campo=form.data_nascimento %}
+  <div data-responsavel-container>
+    {% include "_campo.html" with campo=form.email_responsavel %}
+    <p class="texto-suave aviso-idade">Clientes com menos de 17 anos precisam da autorização do responsável por e-mail.</p>
+  </div>
+  {% include "_campo.html" with campo=form.senha %}
+  {% include "_campo.html" with campo=form.confirmar_senha %}
+  <button class="btn btn-primario btn-bloco btn-auth" type="submit">Cadastrar</button>
+</form>
+<p class="auth-rodape">Já tem login? <a href="{% url 'usuarios:login' %}">Clique aqui</a>.</p>
+{% endblock %}

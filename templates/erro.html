@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block corpo %}
+<main class="conteudo pagina-erro" id="conteudo">
+  <div>
+    <div class="codigo">{{ status }}</div>
+    <h1>{{ titulo }}</h1>
+    <p class="texto-suave">{{ mensagem }}</p>
+    <a class="btn btn-primario" href="/">Voltar ao início</a>
+  </div>
+</main>
+{% endblock %}

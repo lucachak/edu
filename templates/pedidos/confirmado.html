@@ -1,0 +1,27 @@
+{% extends "layouts/app.html" %}{% load fastline_tags %}
+{% block titulo %}Pedido confirmado{% endblock %}
+{% block conteudo %}
+<div class="confirmacao">
+  <div class="icone-ok">{% icone 'check' %}</div>
+  <h1>Pedido Confirmado!</h1>
+  <p class="texto-suave">Seu pagamento foi aprovado{% if pag.provedor == "simulador" %} em modo de demonstração (sem cobrança real){% endif %}. Apresente o código no balcão em até 4 horas.</p>
+  <div class="caixa-token">
+    <small>Código de verificação</small>
+    <div class="token">{{ pedido.token_retirada }}</div>
+    <small style="color:var(--texto-suave);text-transform:none;letter-spacing:0;font-weight:600">Válido até {{ pedido.token_expira_em|date:"d/m/Y H:i" }} · {{ pedido.estabelecimento.nome }}{% if pedido.estabelecimento.local %} · {{ pedido.estabelecimento.local }}{% endif %}</small>
+  </div>
+  <div class="cartao" style="text-align:left">
+    <div class="cartao-titulo" style="font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--laranja-700)">Itens do pedido</div>
+    <table class="tabela-resumo">
+      {% for item in pedido.itens.all %}<tr><td>{{ item.nome_produto }} <span class="texto-suave">{{ item.quantidade }}x</span></td><td>{{ item.subtotal|reais }}</td></tr>{% endfor %}
+      <tr class="total"><td>Total Pago</td><td class="valor-verde">{{ pedido.valor_total|reais }}</td></tr>
+    </table>
+    <hr class="divisor">
+    <div class="linha-entre"><small>Emissão: {{ pedido.confirmado_em|date:"d/m/Y H:i" }}</small><small>Pagamento: {{ pag.get_metodo_pagamento_display|default:"-" }}</small></div>
+  </div>
+  <div class="pilha" style="margin-top:1rem">
+    <a class="btn btn-primario btn-bloco btn-grande" href="{% url 'produtos:cardapio' %}">Fazer Novo Pedido</a>
+    <a class="btn btn-secundario btn-bloco" href="{% url 'pedidos:tickets' %}">Ver meus tickets</a>
+  </div>
+</div>
+{% endblock %}

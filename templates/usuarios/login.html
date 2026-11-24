@@ -1,0 +1,97 @@
+{% extends "layouts/auth.html" %}{% load fastline_tags %}
+{% block titulo %}Entrar{% endblock %}
+{% block auth_conteudo %}
+{% with area_atual=form.area.value|default:"cliente" %}
+<div class="login-area" data-login-area data-area="{% if area_atual == 'cantina' %}cantina{% else %}cliente{% endif %}">
+  <div class="login-boas-vindas">
+    <span class="login-etiqueta" data-login-etiqueta>{% if area_atual == 'cantina' %}ÁREA DA EQUIPE{% else %}SUA CANTINA, SEM FILA{% endif %}</span>
+    <h1 data-login-titulo>{% if area_atual == 'cantina' %}Acesso da cantina{% else %}Que bom te ver por aqui!{% endif %}</h1>
+    <p class="subtitulo" data-login-subtitulo>{% if area_atual == 'cantina' %}Entre com as credenciais da sua equipe.{% else %}Entre para pedir seu lanche sem pegar fila.{% endif %}</p>
+  </div>
+  <form method="post" novalidate data-login-form>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <fieldset class="seletor-area">
+      <legend class="sr-only">Tipo de acesso</legend>
+      {% for opcao in form.area %}
+      <label>
+        <input type="radio" name="area" value="{{ opcao.data.value }}" {% if opcao.data.selected %}checked{% endif %}>
+        <span>{% if opcao.data.value == "cliente" %}{% icone 'user' %}{% else %}{% icone 'store' %}{% endif %}{{ opcao.choice_label }}</span>
+      </label>
+      {% endfor %}
+    </fieldset>
+    <div class="login-contexto" data-login-contexto>{% if area_atual == 'cantina' %}Funcionários e administração{% else %}Área do cliente{% endif %}</div>
+    {% include "_erros_form.html" %}
+    {% include "_campo.html" with campo=form.email %}
+    {% include "_campo.html" with campo=form.senha %}
+    <div data-login-responsavel {% if not form.email_responsavel.errors and not form.email_responsavel.value %}hidden{% endif %}>
+      {% include "_campo.html" with campo=form.email_responsavel %}
+      <p class="texto-suave" style="font-size:.78rem">Preencha este campo se sua conta for de uma pessoa com menos de 17 anos e ainda não tiver autorização.</p>
+    </div>
+    <button class="btn btn-primario btn-bloco btn-auth" type="submit" data-login-botao>{% if area_atual == 'cantina' %}Entrar na cantina{% else %}Entrar{% endif %}</button>
+  </form>
+  <div class="auth-opcoes" data-opcoes-cliente {% if area_atual == 'cantina' %}hidden{% endif %}>
+    <p class="auth-rodape">Ainda não tem conta? <a href="{% url 'usuarios:cadastro' %}">Criar conta de cliente</a>.</p>
+  </div>
+  <div class="auth-opcoes" data-opcoes-cantina {% if area_atual != 'cantina' %}hidden{% endif %}>
+    <p class="auth-rodape">É funcionário? <a href="{% url 'usuarios:cadastro_funcionario' %}">Solicitar acesso à cantina</a>.</p>
+    <p class="auth-rodape texto-suave">Administradores entram com as credenciais da plataforma.</p>
+  </div>
+</div>
+{% endwith %}
+{# Script próprio da tela: a troca Cliente/Cantina não depende do fastline.js nem do cache do navegador. #}
+<script>
+(function () {
+  var raiz = document.querySelector("[data-login-area]");
+  if (!raiz) return;
+  var TEXTOS = {
+    cliente: {
+      etiqueta: "SUA CANTINA, SEM FILA", titulo: "Que bom te ver por aqui!",
+      subtitulo: "Entre para pedir seu lanche sem pegar fila.", contexto: "Área do cliente",
+      botao: "Entrar", email: "seuemail@exemplo.com"
+    },
+    cantina: {
+      etiqueta: "ÁREA DA EQUIPE", titulo: "Acesso da cantina",
+      subtitulo: "Entre com as credenciais da sua equipe.", contexto: "Funcionários e administração",
+      botao: "Entrar na cantina", email: "e-mail cadastrado na cantina"
+    }
+  };
+  function q(sel) { return raiz.querySelector(sel); }
+  function definir(sel, texto) { var el = q(sel); if (el) el.textContent = texto; return el; }
+  function animar(el) {
+    if (!el) return;
+    el.classList.remove("troca-texto");
+    void el.offsetWidth;
+    el.classList.add("troca-texto");
+  }
+  function aplicar(area, animado) {
+    if (!TEXTOS[area]) area = "cliente";
+    var t = TEXTOS[area], cliente = area === "cliente";
+    raiz.setAttribute("data-area", area);
+    var alvos = [
+      definir("[data-login-etiqueta]", t.etiqueta), definir("[data-login-titulo]", t.titulo),
+      definir("[data-login-subtitulo]", t.subtitulo), definir("[data-login-contexto]", t.contexto),
+      definir("[data-login-botao]", t.botao)
+    ];
+    var email = q('input[name="email"]'); if (email) email.placeholder = t.email;
+    var c = q("[data-opcoes-cliente]"), f = q("[data-opcoes-cantina]");
+    if (c) c.hidden = !cliente;
+    if (f) f.hidden = cliente;
+    if (animado) { alvos.concat([cliente ? c : f]).forEach(animar); }
+  }
+  function atual() {
+    var r = q('input[name="area"]:checked');
+    return r ? r.value : "cliente";
+  }
+  raiz.addEventListener("change", function (ev) {
+    if (ev.target && ev.target.name === "area") aplicar(ev.target.value, true);
+  });
+  raiz.addEventListener("click", function (ev) {
+    var rotulo = ev.target.closest ? ev.target.closest(".seletor-area label") : null;
+    var radio = rotulo && rotulo.querySelector('input[name="area"]');
+    if (radio && !radio.checked) { radio.checked = true; aplicar(radio.value, true); }
+  });
+  aplicar(atual(), false);
+})();
+</script>
+{% endblock %}

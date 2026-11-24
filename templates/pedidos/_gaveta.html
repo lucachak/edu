@@ -1,0 +1,11 @@
+{% load fastline_tags %}
+<div class="gaveta-fundo" data-fechar-carrinho></div>
+<aside class="gaveta" id="gaveta-carrinho" aria-label="Meu carrinho" aria-hidden="true">
+  <div class="gaveta-topo">
+    <h2>Meu Carrinho</h2>
+    <button type="button" class="btn-icone" data-fechar-carrinho aria-label="Fechar carrinho">{% icone 'x' %}</button>
+  </div>
+  <div id="carrinho-conteudo" style="display:flex;flex-direction:column;flex:1;min-height:0">
+    {% resumo_carrinho as carrinho %}{% include "pedidos/_carrinho.html" with carrinho=carrinho %}
+  </div>
+</aside>
